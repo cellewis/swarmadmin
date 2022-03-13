@@ -1,88 +1,119 @@
 <template>
-<q-list separator>
-        <transition-group
-          appear
-          enter-active-class="animated fadeIn slow"
-          leave-active-class="animated fadeOut slow"
-        >
-          <q-item
-            v-for="qweet in qweets"
-            :key="qweet.id"
-            class="qweet q-py-md"
-          >
-            <q-item-section avatar top>
-              <q-avatar size="xl">
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-              </q-avatar>
-            </q-item-section>
+  <div class="q-pa-md" >
 
-            <q-item-section>
-              <q-item-label class="text-subtitle1">
-                <strong>Fire</strong>
-                <span class="text-grey-7">
-                  #Fire
-                  <br class="lt-md">&bull; 14 hours ago
-                </span>
-              </q-item-label>
-              <q-item-label class="qweet-content text-body1">{{ qweet.content }}</q-item-label>
-              <div class="qweet-icons row justify-between q-mt-sm">
-                <q-btn
-                  color="grey"
-                  icon="far fa-comment"
-                  size="sm"
-                  flat
-                  round
-                />
-                <q-btn
-                  color="grey"
-                  icon="fas fa-eye"
-                  size="sm"
-                  flat
-                  round
-                />
-                <q-btn
-                  :color="qweet.liked ? 'grey' : 'grey'"
-                  :icon="qweet.liked ? 'fas fa-heart' : 'far fa-heart'"
-                  size="sm"
-                  flat
-                  round
-                />
-              </div>
+    <div class="q-gutter-md row">
+      <q-select
+        filled
+        :model-value="automodel"
+        use-input
+        hide-selected
+        fill-input
+        input-debounce="0"
+        :options="options"
+        @filter="filterFn"
+        @input-value="setModel"
+        style="width: 350px; padding-bottom: 32px"
+      >
+        <template v-slot:no-option>
+          <q-item>
+            <q-item-section class="text-grey">
+              No results
             </q-item-section>
           </q-item>
-        </transition-group>
-      </q-list>
-  <!-- save for later
-    <div class="q-pa-md" >
-    <div class="q-gutter-md row items-start">
-      <q-select
-        color="pink"
-        filled
-          v-model="model"
-          map-options
-          emit-value
-          option-value="id"
-          option-label="text"
-          :options="tops"
-        label="Select a topic: "
-        style="width: 250px"
-      />
+        </template>
 
-      <q-btn flat round color="primary" icon="fas fa-filter" @click="getDetails" />
-      <q-btn flat round color="primary" icon="fas fa-sync-alt" />
-    </div>
-    </div>-->
+        <template v-slot:prepend>           
+          <q-icon name="search" />          
+        </template>
 
-
-   <!-- <div class="q-pa-md" >
-    <q-list bordered padding separator>
-      <q-item 
-      v-for="post in pos" 
-      :key="post.id" 
-      :to="`/Details/${post.id}`" 
-      active-class="q-item-no-link-highlighting">
+      </q-select>
       
-        <q-item-section top avatar>
+      <div class="q-pa-md" style="position: absolute; right: 0;">
+       <q-btn fab flat round icon="far fa-edit" color="accent" size="0xs" fab-mini @click="fixed = true"/>
+       <q-radio keep-color v-model="shape" val="res" label="Restricted" color="teal" />
+       <q-radio keep-color v-model="shape" val="line" label="Unrestricted" color="teal" />
+       </div>
+    </div>
+  
+      <!--
+      <q-toggle
+        v-model="subbed"
+        checked-icon="check"
+        color="red"
+        unchecked-icon="clear"
+        v-on:click="showNotif"
+      />
+      -->
+
+   
+  
+
+     <q-dialog v-model="fixed" no-refocus>
+      <q-card style="width: 600px; height: 400px; background-color: powderblue;">
+        <q-card-actions>
+          <q-btn-dropdown color="primary" label="TOPICS">
+            <q-list v-for="topic in tops" :key="topic.id">
+              <q-item clickable v-close-popup >
+                <q-item-section>
+                  <q-item-label>{{topic.text}}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </q-card-actions>
+
+      
+
+        <q-card-section>
+          <div class="text-h6">New Discusssion For {{ptabtext}} </div>
+        </q-card-section>
+        <q-separator />
+
+        <q-card-section style="height: 120px" class="scroll" counter maxlength="260">
+          <q-input placeholder="Enter Post Here!" type="textarea" v-model="text" counter maxlength="260"  autogrow>
+          </q-input>
+        </q-card-section>
+
+        <q-separator/>
+
+        <q-card-actions> 
+          <div style="min-width: 250px; max-width: 300px">
+            <q-select
+              filled
+              v-model="modelMultiple"
+              multiple
+              :options="options"
+              use-chips
+              stack-label
+              label="Please select tags .."
+            />
+      </div>
+        </q-card-actions>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+          <q-btn flat label="Discard" color="primary" @click="text = ''" v-close-popup />
+          <q-btn flat label="Post" color="primary" v-close-popup @click="triggerPositive(); text = '';"/>
+        </q-card-actions>
+
+      </q-card>
+    </q-dialog>
+  </div>
+      <div>
+      <!--- <q-btn  flat round color="primary" icon="fas fa-sync-alt" /> --->
+      </div>  
+    
+    <div class="q-pa-md" id= "clear" >
+    <q-list bordered padding separator >
+    
+      <q-item 
+        v-for="(post, index) in pos" 
+        :key="post.id" 
+        :to="`/Details/${post.id}`" 
+        active-class="q-item-no-link-highlighting">
+      
+        <q-item-section top avatar> 
           <q-avatar>
             <img src="https://cdn.quasar.dev/img/boy-avatar.png">
           </q-avatar>
@@ -91,21 +122,24 @@
         <q-item-section>
           <q-item-label> <strong> {{post.text}} </strong></q-item-label>
 
+          <div class=" q-gutter-md">
+            
+            <q-chip  v-for="tag in posTags[index]" :key="tag"
+                     square color="purple-2" text-color="white" icon="sell" size="md">     
+                {{tag.text}}
+            </q-chip>
+            
+           </div>
+
           <div class="row justify-between q-mt-sm">
-                <q-btn flat round color="grey" icon="fas fa-comments" size="sm" />
-                <q-btn flat round icon="far fa-eye" size="sm"/>
-                <q-btn flat round icon="far fa-heart" size="sm" />
-                <q-btn-dropdown  flat icon="fas fa-hashtag" size="sm">
-                    <q-list separator>
-                      <q-item  v-close-popup 
-                                v-for="tag in posTags" 
-                                :key="tag" >
-                        <q-item-section >
-                          <q-item-label>{{tag.text}}</q-item-label>
-                        </q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-btn-dropdown>
+                <q-btn @click.prevent flat round color="grey" icon="fas fa-comments" size="sm" />
+                <q-btn @click.prevent flat round icon="far fa-eye" size="sm"/>
+                <q-btn @click.prevent flat round  size="sm"
+                   
+                     icon="far fa-heart"
+                    v-bind:class="{'white': !this.data.clicked, 'blue': this.data.clicked}"
+                    v-on:click ="this.data.clicked = !this.data.clicked" 
+                     />
                 
           </div> 
         </q-item-section>
@@ -114,113 +148,59 @@
           <q-item-label caption> {{post.created}} </q-item-label>
         </q-item-section>
         
-       
+      
       </q-item>
+      
     </q-list>
 
     <br>
-    
     </div>
--->
+    
+    <!--
+    <div class="q-pa-md q-gutter-sm">
+      <q-btn color="teal" label="DELETE TOPIC"/>
 
-    <q-page-sticky position="bottom-right" :offset="[2, 80]">
-      <q-toggle
-        v-model="subbed"
-        checked-icon="check"
-        color="red"
-        unchecked-icon="clear"
-        v-on:click="showNotif"
-      />
-      
-    </q-page-sticky>
-
-    <q-page-sticky position="bottom-right" :offset="[5, 18]">
-      <q-btn fab icon="far fa-edit" color="accent" @click="fixed = true"/>
-    </q-page-sticky>
-
-    <q-dialog v-model="fixed">
-      <q-card style="width: 600px; height: 400px; background-color: powderblue;">
-        <q-card-section>
-          <div class="text-h6">NEW DISCUSSION</div>
-        </q-card-section>
-        
-        <q-card-section>
-        <q-input filled  v-model="ph" placeholder="Enter Title of Post"  />
-        </q-card-section>
-      
-        <q-separator />
-
-        
-        <q-card-section style="height: 200px" class="scroll" counter maxlength="260">
-          <q-input type="textarea" v-model="text" counter maxlength="260"  autogrow>
-          </q-input>
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-actions align="right">
-          <q-btn flat label="Discard" color="primary" @click="text = ''" v-close-popup />
-          <q-btn flat label="Post" color="primary" v-close-popup @click="triggerPositive(); text = '';"/>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
+    </div>
+    -->
 
 </template>
+
+
 
 <script>
 import {defineComponent, defineAsyncComponent, ref} from 'vue';
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
-import { onMounted} from 'vue'
+import { onMounted, onUpdated} from 'vue'
+
+const stringOptions = [
+  'Google', 'Facebook', 'Twitter', 'Apple', 'Oracle'
+].reduce((acc, opt) => {
+  for (let i = 1; i <= 5; i++) {
+    acc.push(opt + ' ' + i)
+  }
+  return acc
+}, [])
+
+
 
 
 export default defineComponent({
   name: 'PostBoard',
 
-  props: ['tpost'],
+  props:['tabText'],
 
   data(){
-    return{
-      newPostContent:'',
-      posts:[
-        {
-          content:'Update your Disaster Preparedness Kit',
-          date:1643636383048
-        },
-        {
-          content:'Gone with the Wind: 318 Roof Destroyed !',
-          date:1643636526005
-        }
-      ],
-      newQweetContent: '',
-      qweets: [
-        {
-           id: 'ID1',
-           content: 'Fire is very hot.',
-           date: 1611653238221,
-           liked: false
-         },
-         {
-           id: 'ID2',
-           content: 'Fire is bad.',
-           date: 1611653252444,
-           liked: true
-         },
-      ]
-    }
-  },
-  methods:{
-    addNewPost() {
-      let newTweet = {
-        content: this.newPostContent,
-        date: Date.now(),
-      };
-      this.tweets.unshift(newTweet);
-      this.newPostContent = "";
-    },
-  }, 
-  setup () {
+        return {
+          topic: this.$route.params.props,
+         
+           
+          }
+        
+     },
+  
+
+  setup (props) {
     const $q = useQuasar()
     const data = ref(null)
     const tops = ref([])
@@ -228,25 +208,45 @@ export default defineComponent({
     const  subbed = ref(true)
     const model = ref(null)
     const posTags = ref([])
+    const tab = ref('flooding')
+    const comments = ref([])
+    const ptabtext = ref('')
+    const searchtags = ref([])
+    const automodel = ref(null)
+    const options = ref(searchtags)
 
-  function loadData () {
-    api.get('https://swarmnet-staging.herokuapp.com/topics',{
-  method: 'GET',
-  
-  headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+
+  function getDetails(topic){
+      pos.value.splice(0)
+
+      let url = "https://swarmnet-staging.herokuapp.com/posts"
+      api.get(url,{
+      method: 'GET',
+      headers: {
+              'Access-Control-Allow-Origin': '*'
+            }
+        })
       .then((response) => {
         data.value = response.data
-        
+
         for (let i of data.value) { 
-          tops.value.push(i)
-         
+          if(i.topicId == parseInt(topic)){
+            pos.value.push(i)
+            posTags.value.push(i.tags)
+          for(let j of comments.value){
+            if(i.id == j.id ){
+              pos.value.pop()
+              posTags.value.pop()
+            }
+            }
+          }
         }
-      
-      /* console.log( tops.value[0].text)
-       console.log(tops) */
+
+        for(let j of tops.value){
+          if(j.id == parseInt(props.tabText)){
+            ptabtext.value = j.text
+          }     
+        }    
       })
       .catch(() => {
         $q.notify({
@@ -256,12 +256,37 @@ export default defineComponent({
           icon: 'report_problem'
         })
       })
-  }
 
-  function getDetails(topic){
-         let url = "https://swarmnet-staging.herokuapp.com/posts/" + model.value.toString()
-         //let url = "https://swarmnet-staging.herokuapp.com/posts/" + toString(topic)
-         console.log(url)
+      }
+
+  function displayAllPost(){
+        let curl = "https://swarmnet-staging.herokuapp.com/replies"
+          api.get(curl,{
+          method: 'GET',
+          
+          headers: {
+                  'Access-Control-Allow-Origin': '*'
+                }
+            })
+          .then((response) => {
+            data.value = response.data
+            
+           for (let i of data.value) { 
+               comments.value.push(i)
+            }
+           })
+          .catch(() => {
+            $q.notify({
+              color: 'negative',
+              position: 'top',
+              message: 'Loading failed',
+              icon: 'report_problem'
+            })
+          })
+
+    
+         let url = "https://swarmnet-staging.herokuapp.com/posts"
+         
           api.get(url,{
           method: 'GET',
           
@@ -271,19 +296,25 @@ export default defineComponent({
             })
           .then((response) => {
             data.value = response.data
-            console.log(data.value)
-            pos.value.push(data.value) 
-
-            posTags.value = pos.value.tags
-            console.log(pos.value.tags)
             
-           /* for (let i of data.value) { 
-              pos.value.push(i)
-            
-            } */
-          
-          console.log( "hi")
-          console.log(pos) 
+           for (let i of data.value) { 
+             for(let k of i.tags){
+              if(searchtags.value.indexOf(k.text) == -1){
+                searchtags.value.push(k.text)
+                console.log(k.text)
+              }
+          }
+             pos.value.push(i)
+             posTags.value.push(i.tags)
+             for(let j of comments.value){
+               if(i.id == j.id){
+                 pos.value.pop()
+                 posTags.value.pop()
+               }  
+             }
+            }
+            console.log(posTags.value)
+           
           })
           .catch(() => {
             $q.notify({
@@ -295,32 +326,84 @@ export default defineComponent({
           })
 
       }
-
+  
   function  showNotif () {
          if (subbed.value == true){
            $q.notify({
-          message: 'SUBSCRIBBED',
+          message: 'SUBSCRIBED',
           color: 'primary',
           avatar: 'https://cdn.quasar.dev/img/boy-avatar.png',
           actions: [
             { label: 'Dismiss', color: 'white', handler: () => { /* ... */ } }
           ]
         })
-         }
-        
+         }   
        }
 
+  function postPost(){
+    let url = "https://swarmnet-staging.herokuapp.com/posts"
+         
+          api.get(url,{
+          method: 'POST',
+          
+          headers: {
+                  'Access-Control-Allow-Origin': '*'
+                }
+            })
+          .then((response) => {
+            if(response.data == "Created"){
+              triggerPositive ();
+              setTimeout(() => {
+                displayAllPost();    
+        }, 3000) 
+            }
+ 
+          })
+          .catch(() => {
+            $q.notify({
+              color: 'negative',
+              position: 'top',
+              message: 'Loading failed',
+              icon: 'report_problem'
+            })
+          })
+
+
+  }     
+
   onMounted(() => {
-      loadData();
+      displayAllPost(); 
     })
+  
+  onUpdated(()=> {
+    getDetails(props.tabText);
+  })
+ 
 
     return {
+      shape: ref('line'),
+      modelMultiple: ref(),
+      automodel,
+      options,
+      searchtags,
+
+      filterFn (val, update, abort) {
+        update(() => {
+          const needle = val.toLocaleLowerCase()
+          options.value = searchtags.value.filter(v => v.toLocaleLowerCase().indexOf(needle) > -1)
+        })
+      },
+
+      setModel (val) {
+        automodel.value = val
+      },
         data, 
-        loadData,
+        displayAllPost,
         tops,
         pos,
         posTags,
         getDetails,
+        ptabtext,
         
         model,
         subbed,
@@ -328,7 +411,8 @@ export default defineComponent({
         text: ref(''),
         ph: ref(''),
         dense: ref(false),
-        topic_tab:ref('all'),
+        tab,
+    
        showNotif,
 
 
@@ -345,30 +429,9 @@ export default defineComponent({
             timeout: 1000
           })
         }, 4000)
-      },
-       filters: {
-    relativeDate(value) {
-      return formatDistance(value, new Date())
-    }
-  },
+      }
       
     }
   }
 })
 </script>
-<style lang="sass">
-.new-qweet
-  textarea
-    font-size: 19px
-    line-height: 1.4 !important
-.divider
-  border-top: 1px solid
-  border-bottom: 1px solid
-  border-color: $grey-4
-.qweet:not(:first-child)
-  border-top: 1px solid rgba(0, 0, 0, 0.12)
-.qweet-content
-  white-space: pre-line
-.qweet-icons
-  margin-left: -5px
-</style>
